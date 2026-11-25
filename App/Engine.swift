@@ -10,6 +10,11 @@ final class Engine: ObservableObject {
         TranslationSession.Configuration(source: Locale.Language(identifier: "en"),
                                          target: Locale.Language(identifier: "tr"))
 
+    /// Görüntü yine de ters gelirse uygulamadan elle 180° çevirmek için.
+    @Published var rotate180: Bool = UserDefaults.standard.bool(forKey: "rotate180") {
+        didSet { UserDefaults.standard.set(rotate180, forKey: "rotate180") }
+    }
+
     let translator = Translator()
     let pip = PiPController()
     private let receiver = FrameReceiver()
@@ -39,7 +44,8 @@ final class Engine: ObservableObject {
     private func handle(_ data: Data) {
         work.async {
             guard !self.busy else { return }
-            guard let image = UIImage(data: data)?.cgImage else { return }
+            guard var image = UIImage(data: data)?.cgImage else { return }
+            if UserDefaults.standard.bool(forKey: "rotate180"), let r = Engine.rotated180(image) { image = r }
             self.busy = true
 
             let blocks = OCR.read(image).filter { !self.outputs.contains($0.text) }
@@ -59,6 +65,18 @@ final class Engine: ObservableObject {
                 }
             }
         }
+    }
+
+    static func rotated180(_ img: CGImage) -> CGImage? {
+        let w = img.width, h = img.height
+        guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+                                  space: CGColorSpaceCreateDeviceRGB(),
+                                  bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue
+                                    | CGBitmapInfo.byteOrder32Little.rawValue) else { return nil }
+        ctx.translateBy(x: CGFloat(w), y: CGFloat(h))
+        ctx.rotate(by: .pi)
+        ctx.draw(img, in: CGRect(x: 0, y: 0, width: w, height: h))
+        return ctx.makeImage()
     }
 
     private func render(_ image: CGImage, _ blocks: [OCR.Block]) {

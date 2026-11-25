@@ -32,6 +32,9 @@ struct ContentView: View {
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
 
+                Toggle("Görüntü ters görünüyorsa çevir (180°)", isOn: $engine.rotate180)
+                    .frame(maxWidth: 520)
+
                 VStack(alignment: .leading, spacing: 14) {
                     step("1", "Dil paketini hazırla (ilk seferde indirme ister).") {
                         Button("Dilleri hazırla") { engine.prepareLanguages() }

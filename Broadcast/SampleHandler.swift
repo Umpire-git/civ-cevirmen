@@ -55,7 +55,15 @@ class SampleHandler: RPBroadcastSampleHandler {
             if let num = CMGetAttachment(sampleBuffer,
                                          key: RPVideoSampleOrientationKey as CFString,
                                          attachmentModeOut: nil) as? NSNumber,
-               let orientation = CGImagePropertyOrientation(rawValue: num.uint32Value) {
+               var orientation = CGImagePropertyOrientation(rawValue: num.uint32Value) {
+                // ReplayKit yatayda sol/sağı ters bildiriyor; düzeltmezsek görüntü 180° dönük çıkıyor.
+                switch orientation {
+                case .left: orientation = .right
+                case .right: orientation = .left
+                case .leftMirrored: orientation = .rightMirrored
+                case .rightMirrored: orientation = .leftMirrored
+                default: break
+                }
                 image = image.oriented(orientation)
             }
             let longest = max(image.extent.width, image.extent.height)
