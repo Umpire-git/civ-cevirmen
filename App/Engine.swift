@@ -15,6 +15,11 @@ final class Engine: ObservableObject {
         didSet { UserDefaults.standard.set(rotate180, forKey: "rotate180") }
     }
 
+    /// Açık: okuma paneli (büyük Türkçe metin). Kapalı: ekranın küçültülmüş hali üzerine yerinde çeviri.
+    @Published var panelMode: Bool = (UserDefaults.standard.object(forKey: "panelMode") as? Bool) ?? true {
+        didSet { UserDefaults.standard.set(panelMode, forKey: "panelMode") }
+    }
+
     let translator = Translator()
     let pip = PiPController()
     private let receiver = FrameReceiver()
@@ -84,7 +89,9 @@ final class Engine: ObservableObject {
             guard let tr = cache[b.text], tr != b.text else { return nil }
             return Overlay.Item(rect: b.rect, text: tr, sourceLineHeight: b.lineHeight)
         }
-        if let out = Overlay.draw(base: image, items: items) {
+        let usePanel = (UserDefaults.standard.object(forKey: "panelMode") as? Bool) ?? true
+        let rendered = usePanel ? Overlay.panel(items: items) : Overlay.draw(base: image, items: items)
+        if let out = rendered {
             pip.show(out)
         }
         busy = false

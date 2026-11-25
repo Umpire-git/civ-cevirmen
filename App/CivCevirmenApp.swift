@@ -32,6 +32,8 @@ struct ContentView: View {
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
 
+                Toggle("Okuma paneli (büyük Türkçe metin)", isOn: $engine.panelMode)
+                    .frame(maxWidth: 520)
                 Toggle("Görüntü ters görünüyorsa çevir (180°)", isOn: $engine.rotate180)
                     .frame(maxWidth: 520)
 
